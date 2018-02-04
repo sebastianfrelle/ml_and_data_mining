@@ -1,41 +1,22 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""The setup script."""
+"""The setup script"""
 
 from setuptools import setup, find_packages
-
-with open('README.rst') as readme_file:
-    readme = readme_file.read()
-
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
-requirements = [
-    "numpy",
-    "matplotlib",
-    "scipy",
-]
-
-setup_requirements = [
-    # TODO(sebastianfrelle): put setup requirements (distutils extensions, etc.) here
-]
-
-test_requirements = [
-    # TODO: put package test requirements here
-]
 
 setup(
     name='dtu_ml_data_mining',
     version='0.1.0',
-    description="DTU Course Exercises and codes",
-    long_description=readme + '\n\n' + history,
+    description="DTU course no. 02450 project source code",
     author="Sebastian Frelle Koch",
     author_email='sebastian.frelle@gmail.com',
     url='https://github.com/sebastianfrelle/dtu_ml_data_mining',
     packages=find_packages(include=['dtu_ml_data_mining']),
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=[
+        'numpy',
+        'matplotlib',
+        'scipy',
+        'xlrd',
+    ],
     zip_safe=False,
     keywords='dtu_ml_data_mining',
     classifiers=[
@@ -50,7 +31,4 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
-    test_suite='tests',
-    tests_require=test_requirements,
-    setup_requires=setup_requirements,
 )
