@@ -16,31 +16,43 @@ attributeNames = doc.row_values(1, 0, 31)
 # Extract class names to python list,
 # then encode with integers (dict)
 
-classLabels = doc.col_values(0, 1, 395)
+classLabels = doc.col_values(0, 1, 649)
 classNames = sorted(set(classLabels))
 classDict = dict(zip(classNames, range(len(classNames))))
 
 nominal_idxs = [0, 1, 3, 4, 5, 8, 9, 10, 11,
                 15, 16, 17, 18, 19, 20, 21, 22]
 
+binary_idxs = [0, 1, 3, 4, 5, 15, 16, 17, 18, 19, 20, 21, 22]
+nominal_idxs = [8, 9, 10, 11]
+
+categorical_idxs = binary_idxs + nominal_idxs
+
 transformed_attributes = {}
 
-X = np.mat(np.empty((394, 32)))
+X = np.mat(np.empty((649, 32)))
 for i in range(32):
-    if i in nominal_idxs:
-        classLabels = doc.col_values(i, 2, 396)
+    if i in categorical_idxs:
+        classLabels = doc.col_values(i, 2, 651)
         classNames = sorted(set(classLabels))
         classDict = dict(zip(classNames, range(len(classNames))))
         transformed_attributes[attributeNames[i]] = classDict
         X[:, i] = np.mat([classDict[value] for value in classLabels]).T
     else:
-        X[:, i] = np.mat(doc.col_values(i, 2, 396)).T
+        X[:, i] = np.mat(doc.col_values(i, 2, 651)).T
 
 # one-out-of-k encoding
-X_k = np.mat(np.empty(X.shape))
+X_k = np.mat(np.empty((X.shape[0], 0)))
 for i in range(32):
-    if i in nominal_idxs:
-        X_k[:, i] = categoric2numeric(X[:, i])[0]
+    if i in categorical_idxs:
+        # Perform k coding
+        # Convert to float data type (dtype=float) to enable division by float
+        k_coded = np.mat(categoric2numeric(X[:, i])[0], dtype=np.float)
+        k_coded /= np.sqrt(k_coded.shape[1])
+        for j in range(k_coded.shape[1]):
+            X_k = np.append(X_k, k_coded[:, j], axis=1)
+    else:
+        X_k = np.append(X_k, X[:, i], axis=1)
 
 # N = X.shape[0]
 # C = len(classNames)
