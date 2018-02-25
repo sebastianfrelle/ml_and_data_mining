@@ -13,10 +13,7 @@ doc = xlrd.open_workbook('project/student/student-por.xls').sheet_by_index(0)
 # Extract attribute names (1st row, column 4 to 12)
 attributeNames = doc.row_values(1, 0, 33)
 
-input_attribute_no = 30
-grades = np.mat(np.empty((649, 3)))
-for i in range(3):
-    grades[:, i] = np.mat(doc.col_values(input_attribute_no + i, 2, 651)).T
+input_attribute_no = 32
 
 # Extract class names to python list,
 # then encode with integers (dict)
@@ -75,11 +72,12 @@ rho = (S * S) / (S * S).sum()
 
 print(X_k.shape)
 
+
 def main():
     # Plot variance explained
     figure()
     plot(range(1, len(rho) + 1), rho, 'o-')
-    title('Variance explained by principal components: w/o grades')
+    title('Variance explained by principal components: w/ grades')
     xlabel('Principal component')
     ylabel('Variance explained')
     show()

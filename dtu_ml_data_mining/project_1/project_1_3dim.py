@@ -16,8 +16,9 @@ attributeNames = doc.row_values(1, 0, 33)
 input_attribute_no = 30
 grades = np.mat(np.empty((649, 3)))
 for i in range(3):
-    grades[:, i] = np.mat(doc.col_values(input_attribute_no + i, 2, 651)).T
+    grades[:, i] = np.mat(doc.col_values(i + input_attribute_no, 2, 651)).T
 
+g1g2 = grades[:, :3]
 # Extract class names to python list,
 # then encode with integers (dict)
 # classLabels = doc.col_values(0, 1, 649)
@@ -59,7 +60,7 @@ for i in range(input_attribute_no):
         X_k = np.append(X_k, X[:, i], axis=1)
 
 N = X_k.shape[0]  # no. of observations
-
+X_k = g1g2
 ## PCA ##
 # Subtract mean value from data
 Y = X_k - np.ones((N, 1)) * X_k.mean(0)
@@ -75,11 +76,12 @@ rho = (S * S) / (S * S).sum()
 
 print(X_k.shape)
 
+
 def main():
     # Plot variance explained
     figure()
     plot(range(1, len(rho) + 1), rho, 'o-')
-    title('Variance explained by principal components: w/o grades')
+    title('Variance explained by principal components')
     xlabel('Principal component')
     ylabel('Variance explained')
     show()
