@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.pyplot import (
     figure, plot, title, xlabel,
-    ylabel, show, legend, subplot, savefig, text, scatter,
+    ylabel, show, legend, subplot, savefig, text, scatter, bar,
 )
 
 from project_1 import *
@@ -28,4 +28,6 @@ for f, i in enumerate(range(M.shape[1] - 3, M.shape[1])):
 print(attributeNames)
 
 savefig('./grades_plot.eps', format='eps', dpi=1000)
+
+
 show()
