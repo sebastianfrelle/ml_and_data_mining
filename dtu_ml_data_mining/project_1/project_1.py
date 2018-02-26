@@ -2,7 +2,10 @@
 import numpy as np
 import xlrd
 
-from matplotlib.pyplot import figure, plot, title, xlabel, ylabel, show, legend
+from matplotlib.pyplot import (
+    figure, plot, title, xlabel, ylabel,
+    show, legend, subplot, suptitle, savefig, xlim, ylim, margins,
+)
 from scipy.linalg import svd
 
 from categoric2numeric import categoric2numeric
@@ -45,6 +48,8 @@ for i in range(input_attribute_no):
     else:
         X[:, i] = np.mat(doc.col_values(i, 2, 651)).T
 
+M = np.append(X, grades, axis=1)
+
 # one-out-of-k encoding
 X_k = np.mat(np.empty((X.shape[0], 0)))
 for i in range(input_attribute_no):
@@ -75,23 +80,72 @@ rho = (S * S) / (S * S).sum()
 
 print(X_k.shape)
 
+print(len(rho))
+
+def percentile_90th():
+    r = 0
+    for i, p in enumerate(rho):
+        if r >= 0.9:
+            print('90th percentile at pca #' + str(i + 1))
+            print(r)
+            break
+        r += p
+
+
+percentile_90th()
+
+
 def main():
     # Plot variance explained
     figure()
-    plot(range(1, len(rho) + 1), rho, 'o-')
-    title('Variance explained by principal components: w/o grades')
-    xlabel('Principal component')
-    ylabel('Variance explained')
-    show()
+    plot(range(1, len(rho) + 1), rho, 'o-', markersize=5)
+    title('Variance explained by principal components')
+    xlabel('Principal component #')
+    ylabel('Variance explained (fraction)')
 
+    savefig('./variance.eps', format='eps', dpi=1000)
+
+    figure()
+    title('Principal component projections')
+    failed_mask = M[:, M.shape[1] - 1] < 10
+    passed_mask = M[:, M.shape[1] - 1] >= 10
+
+    failed_students = Y[failed_mask.A.ravel(), :]
+    passed_students = Y[passed_mask.A.ravel(), :]
+
+    failed_projected_onto_first = failed_students * np.mat(V[:, 0]).T
+    failed_projected_onto_second = failed_students * np.mat(V[:, 1]).T
+
+    plot(failed_projected_onto_first, failed_projected_onto_second, 'o')
+
+    passed_projected_onto_first = passed_students * np.mat(V[:, 0]).T
+    passed_projected_onto_second = passed_students * np.mat(V[:, 1]).T
+
+    plot(passed_projected_onto_first,
+         passed_projected_onto_second, 'o', markersize=3)
+
+    legend(('failed', 'passed'))
+    xlabel('Projected onto PC1')
+    ylabel('Projected onto PC2')
+
+    savefig('./pc1vpc2.eps', format='eps', dpi=1000)
+
+    figure(figsize=(10, 5))
+    suptitle('Correlation: G3 and PC projections')
     projected_onto_first = Y * np.mat(V[:, 0]).T
     projected_onto_second = Y * np.mat(V[:, 1]).T
 
-    # print(projected_onto_first.shape)
-    # print(projected_onto_second.shape)
+    g3 = grades[:, 2]
+    subplot(1, 2, 1)
+    plot(projected_onto_first, g3, 'o', markersize=3)
+    xlabel('PC1 projection')
+    ylabel('G3')
+    subplot(1, 2, 2)
+    plot(projected_onto_second, g3, 'o', markersize=3)
+    xlabel('PC2 projection')
+    ylabel('G3')
 
-    figure()
-    plot(projected_onto_first, projected_onto_second, 'o')
+    savefig('./correlation_pc.eps', format='eps', dpi=1000)
     show()
 
 
