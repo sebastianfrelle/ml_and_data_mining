@@ -50,6 +50,9 @@ for i in range(input_attribute_no):
         X[:, i] = np.mat(doc.col_values(i, 2, 651)).T
 
 M = np.append(X, grades, axis=1)
+np.set_printoptions(precision=3, linewidth=200, suppress=True)
+
+print(X[:2, :])
 
 no_categories = {}
 # one-out-of-k encoding
@@ -68,11 +71,13 @@ for i in range(input_attribute_no):
     else:
         X_k = np.append(X_k, X[:, i], axis=1)
 
+print(X_k[:2, :])
+
 k_encoded_attr_names = []
 for i in range(input_attribute_no):
     try:
         for j in range(no_categories[i]):
-            k_encoded_attr_names.append(f'{attributeNames[i]}_{j + 1}')
+            k_encoded_attr_names.append(f'{attributeNames[i]}_{j}')
     except KeyError:
         k_encoded_attr_names.append(attributeNames[i])
 
