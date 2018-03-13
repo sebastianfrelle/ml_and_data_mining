@@ -28,4 +28,4 @@ title('Illustration of a linear relation with noise')
 
 show()
 
-print('Ran Exercise 5.1.7')
+print('Ran Exercise 5.2.1')

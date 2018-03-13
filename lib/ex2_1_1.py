@@ -14,13 +14,13 @@ classLabels = doc.col_values(0, 2, 92)
 classNames = sorted(set(classLabels))
 classDict = dict(zip(classNames, range(5)))
 
-# Extract vector y, convert to NumPy matrix and transpose
-y = np.mat([classDict[value] for value in classLabels]).T
+# Extract vector y, convert to NumPy array
+y = np.asarray([classDict[value] for value in classLabels])
 
 # Preallocate memory, then extract excel data to matrix X
-X = np.mat(np.empty((90, 8)))
+X = np.empty((90, 8))
 for i, col_id in enumerate(range(3, 11)):
-    X[:, i] = np.mat(doc.col_values(col_id, 2, 92)).T
+    X[:, i] = np.asarray(doc.col_values(col_id, 2, 92))
 
 # Compute values of N, M and C.
 N = len(y)

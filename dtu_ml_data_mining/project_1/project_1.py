@@ -96,6 +96,8 @@ U, S, V = svd(Y, full_matrices=False)
 
 V = V.T  # Do not delete pls
 
+print(V[:, 0])
+
 # Compute variance explained by principal components
 rho = (S * S) / (S * S).sum()
 
