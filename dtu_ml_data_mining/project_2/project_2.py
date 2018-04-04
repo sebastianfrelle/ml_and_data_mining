@@ -2,13 +2,17 @@ import numpy as np
 import xlrd
 from categoric2numeric import categoric2numeric
 
+import os
+
+print(os.getcwd())
+
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 
-doc = xlrd.open_workbook('student-por.xls').sheet_by_index(0)
+doc = xlrd.open_workbook('./student-por.xls').sheet_by_index(0)
 
 attributeNames = doc.row_values(1, 0, 33)
 
-nominal_idxs = [0, 1, 3, 4, 5, 8, 9, 10, 11,15, 16, 17, 18, 19, 20, 21, 22]
+nominal_idxs = [0, 1, 3, 4, 5, 8, 9, 10, 11, 15, 16, 17, 18, 19, 20, 21, 22]
 binary_idxs = [0, 1, 3, 4, 5, 15, 16, 17, 18, 19, 20, 21, 22]
 nominal_idxs = [8, 9, 10, 11]
 categorical_idxs = binary_idxs + nominal_idxs
@@ -32,7 +36,6 @@ for i in range(input_attribute_no):
         X[:, i] = np.mat([classDict[value] for value in classLabels]).T
     else:
         X[:, i] = np.mat(doc.col_values(i, 2, 651)).T
-
 
 M = np.append(X, grades, axis=1)
 
