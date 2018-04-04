@@ -66,3 +66,16 @@ for i in range(input_attribute_no):
 
 
 N = X_k.shape[0]  # no. of observations
+
+
+# Encode grades into classes for pass/fail
+y = grades[:, 2]
+for i in range(y.shape[0]):  # iterate using no. of columns in grades
+    e = y[i, :]
+    if e < 10:
+        y[i, :] = 0
+    else:
+        y[i, :] = 1
+
+y = y.A.ravel()
+print(y.shape)
