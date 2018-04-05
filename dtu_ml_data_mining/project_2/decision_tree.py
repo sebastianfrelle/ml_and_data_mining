@@ -16,15 +16,12 @@ K_inner = 10
 OCV = model_selection.KFold(n_splits=K_outer, shuffle=True)
 ICV = model_selection.KFold(n_splits=K_inner, shuffle=True)
 
-# Error_train = np.empty((K, 1))
-# Error_test = np.empty((K, 1))
-
 gen_errors = np.zeros((19,))
 test_errors = np.zeros((K_outer,))
 
 outer_iteration = 0
-for fold_no, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
-    print(f'Outer {fold_no}/{K_outer}')
+for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
+    print(f'Outer {fold_no_outer}/{K_outer}')
     # extract training and test set for current OCV fold
     X_par = X_k[par_index, :]
     y_par = y[par_index]
@@ -33,8 +30,8 @@ for fold_no, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
 
     test_size_ratio = y_test.shape[0] / X_k.shape[0]
 
-    for fold_no, (train_index, val_index) in enumerate(ICV.split(X_par), 1):
-        print(f'\tInner {fold_no}/{K_inner}')
+    for fold_no_inner, (train_index, val_index) in enumerate(ICV.split(X_par), 1):
+        print(f'\tInner {fold_no_inner}/{K_inner}')
 
         X_train = X_par[train_index, :]
         y_train = y_par[train_index]
@@ -53,9 +50,9 @@ for fold_no, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
             y_est_val = dtc.predict(X_val)
 
             misclass_rate_val = sum(np.abs(y_est_val - y_val)) / float(len(y_est_val)) # validation error?
-            
-            # Add to cumulated generalization error for this particular model, 
-            # i.e. this particular choice for max depth
+
+            # Add to cumulated generalization error for this particular model,
+            # i.e. this particular choice for max depth.
             gen_errors[i] += misclass_rate_val * val_size_ratio
     
     # Find optimal model and train on training data
