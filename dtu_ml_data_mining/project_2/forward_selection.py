@@ -7,8 +7,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from project_2 import *
 
-from toolbox.Tools.toolbox_02450 import feature_selector_lr, bmplot
-
 
 
 def forward_selection_cv(X, y, cv_split=5):
@@ -43,8 +41,38 @@ def forward_selection_cv(X, y, cv_split=5):
 			overall_highest_R2 = highest_R2
 			forward_selected_indexes.append(best_index)
 
-	plt.bar([i for i in range(len(errors))], errors)
-	plt.xticks(np.arange(len(errors)), (k_encoded_attr_names), rotation=45)
+	plt.scatter([i for i in range(2)], errors[0:2])
+	plt.scatter([i for i in range(2,4)], errors[2:4])
+	plt.scatter(4, errors[4])
+	plt.scatter([i for i in range(5,7)], errors[5:7])
+	plt.scatter([i for i in range(7,9)], errors[7:9])
+	plt.scatter([i for i in range(9,11)], errors[9:11])
+	plt.scatter(11, errors[11])
+	plt.scatter(12, errors[12])
+	plt.scatter([i for i in range(13,18)], errors[13:18])
+	plt.scatter([i for i in range(18,23)], errors[18:23])
+	plt.scatter([i for i in range(23,27)], errors[23:27])
+	plt.scatter([i for i in range(27,30)], errors[27:30])
+	plt.scatter(30, errors[30])
+	plt.scatter(31, errors[31])
+	plt.scatter(32, errors[32])
+	plt.scatter([i for i in range(33,35)], errors[33:35])
+	plt.scatter([i for i in range(35,37)], errors[35:37])
+	plt.scatter([i for i in range(37,39)], errors[37:39])
+	plt.scatter([i for i in range(39,41)], errors[39:41])
+	plt.scatter([i for i in range(41,43)], errors[41:43])
+	plt.scatter([i for i in range(43,45)], errors[43:45])
+	plt.scatter([i for i in range(45,47)], errors[45:47])
+	plt.scatter([i for i in range(47,49)], errors[47:49])
+	plt.scatter(50, errors[50])
+	plt.scatter(51, errors[51])
+	plt.scatter(52, errors[52])
+	plt.scatter(53, errors[53])
+	plt.scatter(54, errors[54])
+	plt.scatter(55, errors[55])
+	plt.gcf().subplots_adjust(bottom=0.25)
+	plt.gca().xaxis.grid(True)
+	plt.xticks(np.arange(len(errors)), (k_encoded_attr_names), rotation=75)
 	plt.show()
 
 	return forward_selected_indexes
