@@ -11,13 +11,14 @@ from dtu_ml_data_mining.project_2.project_2 import *
 ## Cross validation ##
 
 # Outer layer. Compute 5 different optimal models and their test errors
-K_outer = 5
+K_outer = 10
 K_inner = 10
 OCV = model_selection.KFold(n_splits=K_outer, shuffle=True)
 ICV = model_selection.KFold(n_splits=K_inner, shuffle=True)
 
 gen_errors = np.zeros((19,))
 test_errors = np.zeros((K_outer,))
+test_errors_ratio = np.zeros((K_outer,))
 
 outer_iteration = 0
 for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
@@ -40,7 +41,7 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
 
         val_size_ratio = y_val.shape[0] / y_par.shape[0]
 
-        k = range(2, 21) # tree complexity
+        k = range(2, 21)  # tree complexity
 
         # Train each model
         for i, d in enumerate(k):
@@ -49,29 +50,42 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
             dtc = dtc.fit(X_train, y_train)
             y_est_val = dtc.predict(X_val)
 
-            misclass_rate_val = sum(np.abs(y_est_val - y_val)) / float(len(y_est_val)) # validation error?
+            # validation error
+            val_error = sum(np.abs(y_est_val - y_val))
 
             # Add to cumulated generalization error for this particular model,
             # i.e. this particular choice for max depth.
-            gen_errors[i] += misclass_rate_val * val_size_ratio
-    
+            gen_errors[i] += val_error * val_size_ratio
+
     # Find optimal model and train on training data
     optimal_model_idx = np.argmin(gen_errors)
     optimal_depth = range(2, 21)[optimal_model_idx]
-    dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=optimal_depth)
+    dtc = tree.DecisionTreeClassifier(
+        criterion='gini', max_depth=optimal_depth)
     dtc = dtc.fit(X_par, y_par)
-    
+
     # Validate against test data to obtain the test error
     y_est_test = dtc.predict(X_test)
-    misclass_rate_test = sum(np.abs(y_est_test - y_test)) / float(len(y_est_test))
 
-    test_errors[outer_iteration] = misclass_rate_test * test_size_ratio
+    test_error = sum(np.abs(y_est_test - y_test))
+    test_errors[outer_iteration] = test_error * test_size_ratio
+
+    test_error_ratio = test_error / len(y_test)
+    test_errors_ratio[outer_iteration] = test_error_ratio * test_size_ratio
     outer_iteration += 1
 
-# Use the newly calculated test errors to find the generalization error
-print(f'Test errors (weighted with respect to size of test set): {test_errors}')
 gen_error = np.sum(test_errors)
+gen_error_ratio = np.sum(test_errors_ratio)
+
+# Use the newly calculated test errors to find the generalization error
+print(f'Test errors (weighted with respect to size of test set): ',
+      test_errors)
 print(f'Generalization error: {gen_error}')
+
+print(f'Test errors (ratios; weighted with respect to size of test set): ',
+      test_errors_ratio)
+print(f'Generalization error: {gen_error_ratio * 100}%')
+
 
 #         y_est_val = dtc.predict(X_val)
 
