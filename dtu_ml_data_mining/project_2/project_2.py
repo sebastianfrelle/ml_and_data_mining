@@ -4,7 +4,8 @@ from categoric2numeric import categoric2numeric
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 
-doc = xlrd.open_workbook('dtu_ml_data_mining/project_2/student-por.xls').sheet_by_index(0)
+doc = xlrd.open_workbook(
+    'dtu_ml_data_mining/project_2/student-por.xls').sheet_by_index(0)
 
 attributeNames = doc.row_values(1, 0, 33)
 

@@ -8,20 +8,22 @@ from dtu_ml_data_mining.project_2.project_2 import *
 
 # Define models for splitting outer and inner folds
 no_models = 5
-K_outer = 5
+K_outer = 10
 K_inner = 10
 OCV = model_selection.KFold(n_splits=K_outer, shuffle=True)
 ICV = model_selection.KFold(n_splits=K_inner, shuffle=True)
 
 
-# Train model with different regularization strengths. sklearn method takes inverse regularization
-# strength, so produce an inverse list.
+# Train model with different regularization strengths. sklearn method takes
+# inverse regularization strength, so prepare by producing a list containing the
+# inverse of our reg. strengths.
 regularization_strengths = [10 ** e for e in range(-2, 3)]
 inv_regs = [1 / e for e in regularization_strengths]
 
 # Store generalization
 gen_errors = np.zeros((len(inv_regs),))
 test_errors = np.zeros((K_outer,))
+test_errors_ratio = np.zeros((K_outer,))
 
 outer_iteration = 0
 for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
@@ -33,7 +35,7 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     X_test = X_k[test_index, :]
     y_test = y[test_index]
 
-    # Ratio of test 
+    # Ratio of test
     test_size_ratio = y_test.shape[0] / X_k.shape[0]
 
     for fold_no_inner, (train_index, val_index) in enumerate(ICV.split(X_par), 1):
@@ -57,24 +59,36 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
             y_est_val = model.predict(X_val)
             # y_est_fail_prob = model.predict_proba(X_val)[:, 0]
 
-            misclass_rate_val = sum(np.abs(y_est_val - y_val)) / float(len(y_est_val))
+            val_error = sum(np.abs(y_est_val - y_val))
+            gen_errors[i] += val_error * val_size_ratio
 
-            gen_errors[i] += misclass_rate_val * val_size_ratio
-
-    # Find the optimal regularization strength. Build that model
+    # Find the optimal regularization strength. Initialize that model.
     optimal_model_idx = np.argmin(gen_errors)
     opt_inv_regularization_strength = inv_regs[optimal_model_idx]
-    opt_model = lm.logistic.LogisticRegression(C=opt_inv_regularization_strength)
+    opt_model = lm.logistic.LogisticRegression(
+        C=opt_inv_regularization_strength)
 
-    # Train on the par set, then validate against the test data to obtain the 
-    # test error.
+    # Train that model on the par set, then validate against the test data to
+    # obtain the test error.
     opt_model = opt_model.fit(X_par, y_par)
     y_est_test = opt_model.predict(X_test)
-    misclass_rate_test = sum(np.abs(y_est_test - y_test)) / float(len(y_est_test))
 
-    test_errors[outer_iteration] = misclass_rate_test * test_size_ratio
+    test_error = sum(np.abs(y_est_test - y_test))
+    test_errors[outer_iteration] = test_error * test_size_ratio
+
+    test_error_ratio = test_error / len(y_test)
+    test_errors_ratio[outer_iteration] = test_error_ratio * test_size_ratio
+
     outer_iteration += 1
 
-print(f'Test errors (weighted with respect to size of test set): {test_errors}')
 gen_error = np.sum(test_errors)
+gen_error_ratio = np.sum(test_errors_ratio)
+
+
+print(('Test errors (weighted with respect to size of test set): '
+       f'{test_errors}'))
 print(f'Generalization error: {gen_error}')
+
+print(('Test errors (weighted with respect to size of test set): '
+       f'{test_errors_ratio}'))
+print(f'Generalization error ratio: {gen_error_ratio * 100}%')
