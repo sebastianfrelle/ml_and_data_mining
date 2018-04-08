@@ -1,18 +1,14 @@
 import numpy as np
 import xlrd
 from categoric2numeric import categoric2numeric
-from forward_selection import forward_selection_cv
-
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 
-doc = xlrd.open_workbook('student-por.xls').sheet_by_index(0)
+doc = xlrd.open_workbook('./dtu_ml_data_mining/project_2/student-por.xls').sheet_by_index(0)
 
 attributeNames = doc.row_values(1, 0, 33)
 
-nominal_idxs = [0, 1, 3, 4, 5, 8, 9, 10, 11,15, 16, 17, 18, 19, 20, 21, 22]
+nominal_idxs = [0, 1, 3, 4, 5, 8, 9, 10, 11, 15, 16, 17, 18, 19, 20, 21, 22]
 binary_idxs = [0, 1, 3, 4, 5, 15, 16, 17, 18, 19, 20, 21, 22]
 nominal_idxs = [8, 9, 10, 11]
 categorical_idxs = binary_idxs + nominal_idxs
@@ -36,7 +32,6 @@ for i in range(input_attribute_no):
         X[:, i] = np.mat([classDict[value] for value in classLabels]).T
     else:
         X[:, i] = np.mat(doc.col_values(i, 2, 651)).T
-
 
 M = np.append(X, grades, axis=1)
 
@@ -67,10 +62,15 @@ for i in range(input_attribute_no):
 
 
 N = X_k.shape[0]  # no. of observations
-print(grades[0,:])
 
 
-forward_selection_cv(X_k, grades[:,2])
+# Encode grades into classes for pass/fail
+y = grades[:, 2].copy()
+for i in range(y.shape[0]):  # iterate using no. of columns in grades
+    e = y[i, :]
+    if e < 10:
+        y[i, :] = 0
+    else:
+        y[i, :] = 1
 
-X_train, X_test, y_train, y_test = train_test_split(X_k, grades[:,2], test_size=0.1, random_state=0)
-
+y = y.A.ravel()

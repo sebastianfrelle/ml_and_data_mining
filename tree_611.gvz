@@ -1,0 +1,32 @@
+digraph Tree {
+node [shape=box] ;
+0 [label="Total sulfur dioxide <= 66.5\ngini = 0.365\nsamples = 6304\nvalue = [1517, 4787]"] ;
+1 [label="Chlorides <= 0.046\ngini = 0.177\nsamples = 1323\nvalue = [1193, 130]"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="Sulphates <= 0.555\ngini = 0.217\nsamples = 129\nvalue = [16, 113]"] ;
+1 -> 2 ;
+3 [label="gini = 0.04\nsamples = 98\nvalue = [2, 96]"] ;
+2 -> 3 ;
+4 [label="gini = 0.495\nsamples = 31\nvalue = [14, 17]"] ;
+2 -> 4 ;
+5 [label="Sulphates <= 0.365\ngini = 0.028\nsamples = 1194\nvalue = [1177, 17]"] ;
+1 -> 5 ;
+6 [label="gini = 0.278\nsamples = 6\nvalue = [1, 5]"] ;
+5 -> 6 ;
+7 [label="gini = 0.02\nsamples = 1188\nvalue = [1176, 12]"] ;
+5 -> 7 ;
+8 [label="Chlorides <= 0.069\ngini = 0.122\nsamples = 4981\nvalue = [324, 4657]"] ;
+0 -> 8 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+9 [label="Volatile acidity <= 0.825\ngini = 0.022\nsamples = 4506\nvalue = [49, 4457]"] ;
+8 -> 9 ;
+10 [label="gini = 0.019\nsamples = 4495\nvalue = [43, 4452]"] ;
+9 -> 10 ;
+11 [label="gini = 0.496\nsamples = 11\nvalue = [6, 5]"] ;
+9 -> 11 ;
+12 [label="Density <= 0.995\ngini = 0.488\nsamples = 475\nvalue = [275, 200]"] ;
+8 -> 12 ;
+13 [label="gini = 0.105\nsamples = 126\nvalue = [7, 119]"] ;
+12 -> 13 ;
+14 [label="gini = 0.356\nsamples = 349\nvalue = [268, 81]"] ;
+12 -> 14 ;
+}

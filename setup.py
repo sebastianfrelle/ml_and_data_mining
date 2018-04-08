@@ -15,5 +15,6 @@ setup(
         'matplotlib',
         'scipy',
         'xlrd',
+        'graphviz',
     ],
 )
