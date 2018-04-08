@@ -1,5 +1,5 @@
 from matplotlib.pyplot import (figure, hold, plot, title, xlabel, ylabel,
-                               colorbar, imshow, xticks, yticks, show)
+                               colorbar, imshow, xticks, yticks, show, suptitle)
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn import model_selection
@@ -26,7 +26,7 @@ OCV = model_selection.KFold(n_splits=K_1, shuffle=True)
 ICV = model_selection.KFold(n_splits=K_2, shuffle=True)
 
 # Error matrixs
-error_val = np.empty((L, 2, 10))
+error_val = np.empty((L, 2, K_2))
 error_gen = np.empty((L, 2))
 errors = np.zeros(K_1)
 
@@ -60,7 +60,7 @@ for par_index, test_index in OCV.split(X_k):
                 y_est = knclassifier.predict(X_val)
 
                 # Calculate validation error * X_val / X_par
-                error_val[int(knn / M - 1)][(d - 1)][k_2] = np.sum(y_est != y_val, dtype=float) * len(X_val) / len(X_par)
+                error_val[int(knn / M - 1), (d - 1), k_2] = np.sum(y_est != y_val, dtype=float) * (len(X_val) / len(X_par))
 
         k_2 += 1
 
@@ -88,7 +88,7 @@ for par_index, test_index in OCV.split(X_k):
     y_est = knclassifier.predict(X_test)
 
     # Compute true generalisation error for the model * X_test / X_k
-    errors[k_1] = np.sum(y_est != y_test, dtype=float) * len(X_test) / len(X_k)
+    errors[k_1] = (np.sum(y_est != y_test, dtype=float) / len(X_test)) * (len(X_test) / len(X_k))
 
     # Plot Confusion Matrix
     cm = confusion_matrix(y_test, y_est)
@@ -101,11 +101,12 @@ for par_index, test_index in OCV.split(X_k):
     yticks(range(2))
     xlabel('Predicted class')
     ylabel('Actual class')
-    title('Confusion matrix (Accuracy: {0}%, Error Rate: {1}%)'.format(accuracy, error_rate));
-    show()
+    suptitle('Confusion matrix (Accuracy: {0}%, Error Rate: {1}%)'.format(accuracy, error_rate))
+    title('KNN Model (Distance: {0}, KNN: {1})'.format(d_min_index + 1, knn_min_index));
+    # show()
 
     k_1 += 1
 
 
 # Print the classification error rate
-print('Error rate: {0}%'.format(np.sum(errors)))
+print('Error rate: {0}%'.format(100 * np.sum(errors)))
