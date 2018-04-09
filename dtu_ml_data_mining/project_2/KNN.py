@@ -4,7 +4,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn import model_selection
 
-from project_2 import *
+from dtu_ml_data_mining.project_2.project_2 import *
+
 
 # Maximum number of KNN
 L = 30
@@ -29,6 +30,17 @@ ICV = model_selection.KFold(n_splits=K_2, shuffle=True)
 error_val = np.empty((L, 2, K_2))
 error_gen = np.empty((L, 2))
 errors = np.zeros(K_1)
+
+
+class ParamSet:
+    """Container for test error and corresponding parameters"""
+    def __init__(self, test_error, neighbors, norm):
+        self.test_error = test_error
+        self.neighbors = neighbors
+        self.norm = norm
+
+
+optimal_parameters = []
 
 # Start two layer crossvalidation
 k_1 = 0
@@ -68,7 +80,8 @@ for par_index, test_index in OCV.split(X_k):
     # Calculate Generalisation Error for every model
     for knn in KNN:
         for d in dist:
-            error_gen[int(knn / M - 1)][d - 1] = np.sum(error_val[int(knn / M - 1)][d - 1], dtype=float)
+            error_gen[int(
+                knn / M - 1)][d - 1] = np.sum(error_val[int(knn / M - 1)][d - 1], dtype=float)
 
     # find model with minimum error
     d_min_index = 0
@@ -83,12 +96,15 @@ for par_index, test_index in OCV.split(X_k):
             knn_min_index = knn
 
     # Train on X_par
-    knclassifier = KNeighborsClassifier(n_neighbors=knn_min_index, p=d_min_index + 1)
+    knclassifier = KNeighborsClassifier(
+        n_neighbors=knn_min_index, p=d_min_index + 1)
     knclassifier.fit(X_par, y_par)
     y_est = knclassifier.predict(X_test)
 
     # Compute true generalisation error for the model * X_test / X_k
-    errors[k_1] = (np.sum(y_est != y_test, dtype=float) / len(X_test)) * (len(X_test) / len(X_k))
+    test_error = (np.sum(y_est != y_test, dtype=float) /
+                  len(X_test)) * (len(X_test) / len(X_k))
+    errors[k_1] = test_error
 
     # Plot Confusion Matrix
     cm = confusion_matrix(y_test, y_est)
@@ -101,12 +117,23 @@ for par_index, test_index in OCV.split(X_k):
     yticks(range(2))
     xlabel('Predicted class')
     ylabel('Actual class')
-    suptitle('Confusion matrix (Accuracy: {0}%, Error Rate: {1}%)'.format(accuracy, error_rate))
-    title('KNN Model (Distance: {0}, KNN: {1})'.format(d_min_index + 1, knn_min_index));
+    suptitle('Confusion matrix (Accuracy: {0}%, Error Rate: {1}%)'.format(
+        accuracy, error_rate))
+    title('KNN Model (Distance: {0}, KNN: {1})'.format(
+        d_min_index + 1, knn_min_index))
     # show()
+
+    # Save set of optimal parameters
+    optimal_parameters.append(ParamSet(test_error, knn_min_index, d_min_index + 1))
 
     k_1 += 1
 
 
 # Print the classification error rate
 print('Error rate: {0}%'.format(100 * np.sum(errors)))
+
+# Find optimal model by minimizing with respect to test_error
+opt_param_set = min(optimal_parameters, key=lambda p: p.test_error)
+print(('Optimal parameter set:\n'
+       ' - Neighbors: {}\n'
+       ' - Norm: {}').format(opt_param_set.neighbors, opt_param_set.norm))

@@ -10,18 +10,29 @@ from dtu_ml_data_mining.project_2.project_2 import *
 
 ## Cross validation ##
 
+# Standardize and normalize the data #
+# Subtract mean value from data
+X_k = X_k - np.ones((N, 1)) * X_k.mean(0)
+
+# Divide by standard deviation
+X_k /= np.ones((N, 1)) * X_k.std(0)
+
 # Outer layer. Compute 5 different optimal models and their test errors
 K_outer = 10
 K_inner = 10
 OCV = model_selection.KFold(n_splits=K_outer, shuffle=True)
 ICV = model_selection.KFold(n_splits=K_inner, shuffle=True)
 
-gen_errors = np.zeros((19,))
 test_errors = np.zeros((K_outer,))
 test_errors_ratio = np.zeros((K_outer,))
 
+optimal_depths = {}
+
 outer_iteration = 0
 for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
+    # Reset generalization error estimate array
+    gen_errors = np.zeros((19,))
+
     print(f'Outer {fold_no_outer}/{K_outer}')
     # extract training and test set for current OCV fold
     X_par = X_k[par_index, :]
@@ -60,8 +71,8 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     # Find optimal model and train on training data
     optimal_model_idx = np.argmin(gen_errors)
     optimal_depth = range(2, 21)[optimal_model_idx]
-    dtc = tree.DecisionTreeClassifier(
-        criterion='gini', max_depth=optimal_depth)
+    dtc = tree.DecisionTreeClassifier(criterion='gini',
+                                      max_depth=optimal_depth)
     dtc = dtc.fit(X_par, y_par)
 
     # Validate against test data to obtain the test error
@@ -72,10 +83,15 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
 
     test_error_ratio = test_error / len(y_test)
     test_errors_ratio[outer_iteration] = test_error_ratio * test_size_ratio
+
+    optimal_depths[optimal_depth] = test_error_ratio
+
     outer_iteration += 1
+
 
 gen_error = np.sum(test_errors)
 gen_error_ratio = np.sum(test_errors_ratio)
+
 
 # Use the newly calculated test errors to find the generalization error
 print(f'Test errors (weighted with respect to size of test set): ',
@@ -86,6 +102,8 @@ print(f'Test errors (ratios; weighted with respect to size of test set): ',
       test_errors_ratio)
 print(f'Generalization error: {gen_error_ratio * 100}%')
 
+print('The optimal model parameters (depth, test_error): ',
+      min(optimal_depths.items(), key=lambda e: e[1]))
 
 #         y_est_val = dtc.predict(X_val)
 

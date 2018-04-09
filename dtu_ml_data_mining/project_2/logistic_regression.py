@@ -6,6 +6,14 @@ from dtu_ml_data_mining.project_2.project_2 import *
 
 ## Cross validation ##
 
+# Standardize and normalize the data #
+# Subtract mean value from data
+X_k = X_k - np.ones((N, 1)) * X_k.mean(0)
+
+# Divide by standard deviation
+X_k /= np.ones((N, 1)) * X_k.std(0)
+
+
 # Define models for splitting outer and inner folds
 no_models = 5
 K_outer = 10
@@ -21,13 +29,15 @@ regularization_strengths = [10 ** e for e in range(-2, 3)]
 inv_regs = [1 / e for e in regularization_strengths]
 
 # Store generalization
-gen_errors = np.zeros((len(inv_regs),))
 test_errors = np.zeros((K_outer,))
 test_errors_ratio = np.zeros((K_outer,))
+
+optimal_params = {}
 
 outer_iteration = 0
 for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     print(f'Outer {fold_no_outer}/{K_outer}')
+    gen_errors = np.zeros((len(inv_regs),))
 
     # Select data for outer fold
     X_par = X_k[par_index, :]
@@ -79,6 +89,8 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     test_error_ratio = test_error / len(y_test)
     test_errors_ratio[outer_iteration] = test_error_ratio * test_size_ratio
 
+    optimal_params[opt_inv_regularization_strength] = test_error_ratio
+
     outer_iteration += 1
 
 gen_error = np.sum(test_errors)
@@ -92,3 +104,9 @@ print(f'Generalization error: {gen_error}')
 print(('Test errors (weighted with respect to size of test set): '
        f'{test_errors_ratio}'))
 print(f'Generalization error ratio: {gen_error_ratio * 100}%')
+
+
+# Print the optimal inverse regularization strength based on minimizing the
+# test errors
+print('Optimal inverse regularization strength and its test error:')
+print(min(optimal_params.items(), key=lambda e: e[1]))
