@@ -1,9 +1,16 @@
 # exercise 6.1.1
+import os
+
 import graphviz
 import numpy as np
-from matplotlib.pylab import figure, legend, plot, show, xlabel, ylabel
+from matplotlib.pylab import (
+    figure, legend, plot, show, xlabel, ylabel, text,
+    imshow, colorbar, xticks, yticks, suptitle, title, savefig, close,
+)
+from matplotlib.pylab import cm as colormap
 from scipy.io import loadmat
 from sklearn import model_selection, tree
+from sklearn.metrics import confusion_matrix
 
 from dtu_ml_data_mining.project_2.project_2 import *
 
@@ -17,14 +24,27 @@ X_k = X_k - np.ones((N, 1)) * X_k.mean(0)
 # Divide by standard deviation
 X_k /= np.ones((N, 1)) * X_k.std(0)
 
+# Join observations with response variable and shuffle everything together;
+# then split and carry out analysis.
+y = y.reshape(y.shape[0], 1)
+X_k_with_grades = np.append(X_k, y, axis=1)
+
+# Shuffle rows according to seed
+np.random.seed(seed=20)
+np.random.shuffle(X_k_with_grades)
+
+X_k, y = X_k_with_grades[:, :-1], X_k_with_grades[:, -1]
+y = y.A.ravel()
+
 # Outer layer. Compute 5 different optimal models and their test errors
 K_outer = 10
 K_inner = 10
-OCV = model_selection.KFold(n_splits=K_outer, shuffle=True)
-ICV = model_selection.KFold(n_splits=K_inner, shuffle=True)
+OCV = model_selection.KFold(n_splits=K_outer, shuffle=False)
+ICV = model_selection.KFold(n_splits=K_inner, shuffle=False)
 
 test_errors = np.zeros((K_outer,))
-test_errors_ratio = np.zeros((K_outer,))
+test_errors_weighted = np.zeros((K_outer,))
+test_errors_weighted_ratio = np.zeros((K_outer,))
 
 optimal_depths = {}
 
@@ -79,31 +99,79 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     y_est_test = dtc.predict(X_test)
 
     test_error = sum(np.abs(y_est_test - y_test))
-    test_errors[outer_iteration] = test_error * test_size_ratio
+    test_errors[outer_iteration] = test_error
+    test_errors_weighted[outer_iteration] = test_error * test_size_ratio
 
     test_error_ratio = test_error / len(y_test)
-    test_errors_ratio[outer_iteration] = test_error_ratio * test_size_ratio
+    test_errors_weighted_ratio[outer_iteration] = test_error_ratio * \
+        test_size_ratio
+
+    # Plot Confusion Matrix
+    cm = confusion_matrix(y_test, y_est_test)
+    accuracy = 100 * cm.diagonal().sum() / cm.sum()
+    error_rate = 100 - accuracy
+    figure(2)
+
+    thresh = 30
+    for i in (0, 1):
+        for j in (0, 1):
+            text(j, i, str(cm[i, j]),
+                 horizontalalignment='center',
+                 color='white' if cm[i, j] > thresh else 'black')
+
+    imshow(cm, cmap=colormap.Blues, vmin=0, vmax=80)
+    bounds = list(range(0, 85, 5))
+    colorbar(boundaries=bounds)
+    xticks(range(2), ('failed', 'passed'))
+    yticks(range(2), ('failed', 'passed'))
+    xlabel('Predicted class')
+    ylabel('Actual class')
+    suptitle('Confusion matrix (Accuracy: {:.4f}%, Error Rate: {:.4f}%)'.format(
+        accuracy, error_rate))
+    title('DT Model (depth: {})'.format(optimal_depth))
+
+    filepath = os.path.dirname(os.path.realpath(__file__))
+    output_path = os.path.join(filepath,
+                               f'confusion_matrices/dt/confmat_{outer_iteration + 1}.png')
+    savefig(output_path, format='png', dpi=500, bbox_inches='tight')
+    # show()
+    close()
 
     optimal_depths[optimal_depth] = test_error_ratio
 
     outer_iteration += 1
 
 
-gen_error = np.sum(test_errors)
-gen_error_ratio = np.sum(test_errors_ratio)
+gen_error = np.sum(test_errors_weighted)
+gen_error_ratio = np.sum(test_errors_weighted_ratio)
 
+# Print unweighted test errors
+print('Unweighted test errors (Fold <fold_no>: <test_error>):')
+for i, t in enumerate(test_errors, 1):
+    print(f'Fold {i}: {t}')
 
 # Use the newly calculated test errors to find the generalization error
+
+
 print(f'Test errors (weighted with respect to size of test set): ',
-      test_errors)
+      test_errors_weighted)
 print(f'Generalization error: {gen_error}')
 
 print(f'Test errors (ratios; weighted with respect to size of test set): ',
-      test_errors_ratio)
+      test_errors_weighted_ratio)
 print(f'Generalization error: {gen_error_ratio * 100}%')
 
 print('The optimal model parameters (depth, test_error): ',
       min(optimal_depths.items(), key=lambda e: e[1]))
+
+
+dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=3)
+dtc = dtc.fit(X_k, y)
+out = tree.export_graphviz(dtc, out_file='tree_project_2.gvz',
+                           feature_names=k_encoded_attr_names)
+
+# src = graphviz.Source.from_file('tree_project_2.gvz')
+
 
 #         y_est_val = dtc.predict(X_val)
 
@@ -169,11 +237,3 @@ print('The optimal model parameters (depth, test_error): ',
 #         k = j
 
 # print(f'lowest error for depth {k}')
-
-# dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=k)
-# dtc = dtc.fit(X_k, y)
-
-# out = tree.export_graphviz(
-#     dtc, out_file='tree_project_2.gvz', feature_names=k_encoded_attr_names)
-# # graphviz.render('dot','png','tree_gini',quiet=False)
-# src = graphviz.Source.from_file('tree_project_2.gvz')

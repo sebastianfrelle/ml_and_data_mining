@@ -1,6 +1,15 @@
+import os
+
 import numpy as np
-from sklearn import model_selection
 import sklearn.linear_model as lm
+from matplotlib.pylab import cm as colormap
+from matplotlib.pylab import (
+    close, colorbar, figure, imshow, legend, plot, savefig, show, suptitle,
+    text, title, xlabel, xticks, ylabel, yticks,
+)
+from sklearn import model_selection
+from sklearn.metrics import confusion_matrix
+
 
 from dtu_ml_data_mining.project_2.project_2 import *
 
@@ -13,13 +22,24 @@ X_k = X_k - np.ones((N, 1)) * X_k.mean(0)
 # Divide by standard deviation
 X_k /= np.ones((N, 1)) * X_k.std(0)
 
+# Join observations with response variable and shuffle everything together;
+# then split and carry out analysis.
+y = y.reshape(y.shape[0], 1)
+X_k_with_grades = np.append(X_k, y, axis=1)
+
+# Shuffle rows according to seed
+np.random.seed(seed=20)
+np.random.shuffle(X_k_with_grades)
+
+X_k, y = X_k_with_grades[:, :-1], X_k_with_grades[:, -1]
+y = y.A.ravel()
 
 # Define models for splitting outer and inner folds
 no_models = 5
 K_outer = 10
 K_inner = 10
-OCV = model_selection.KFold(n_splits=K_outer, shuffle=True)
-ICV = model_selection.KFold(n_splits=K_inner, shuffle=True)
+OCV = model_selection.KFold(n_splits=K_outer, shuffle=False)
+ICV = model_selection.KFold(n_splits=K_inner, shuffle=False)
 
 
 # Train model with different regularization strengths. sklearn method takes
@@ -30,7 +50,9 @@ inv_regs = [1 / e for e in regularization_strengths]
 
 # Store generalization
 test_errors = np.zeros((K_outer,))
-test_errors_ratio = np.zeros((K_outer,))
+test_errors_weighted = np.zeros((K_outer,))
+test_errors_weighted_ratio = np.zeros((K_outer,))
+
 
 optimal_params = {}
 
@@ -75,6 +97,7 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     # Find the optimal regularization strength. Initialize that model.
     optimal_model_idx = np.argmin(gen_errors)
     opt_inv_regularization_strength = inv_regs[optimal_model_idx]
+    opt_regularization_strength = regularization_strengths[optimal_model_idx]
     opt_model = lm.logistic.LogisticRegression(
         C=opt_inv_regularization_strength)
 
@@ -84,25 +107,63 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     y_est_test = opt_model.predict(X_test)
 
     test_error = sum(np.abs(y_est_test - y_test))
-    test_errors[outer_iteration] = test_error * test_size_ratio
+    test_errors[outer_iteration] = test_error
+    test_errors_weighted[outer_iteration] = test_error * test_size_ratio
 
-    test_error_ratio = test_error / len(y_test)
-    test_errors_ratio[outer_iteration] = test_error_ratio * test_size_ratio
+    test_error_weighted_ratio = test_error / len(y_test)
+    test_errors_weighted_ratio[outer_iteration] = test_error_weighted_ratio * \
+        test_size_ratio
 
-    optimal_params[opt_inv_regularization_strength] = test_error_ratio
+    # Plot Confusion Matrix
+    cm = confusion_matrix(y_test, y_est_test)
+    accuracy = 100 * cm.diagonal().sum() / cm.sum()
+    error_rate = 100 - accuracy
+    figure(2)
+
+    thresh = 30
+    for i in (0, 1):
+        for j in (0, 1):
+            text(j, i, str(cm[i, j]),
+                 horizontalalignment='center',
+                 color='white' if cm[i, j] > thresh else 'black')
+
+    imshow(cm, cmap=colormap.Blues, vmin=0, vmax=80)
+    bounds = list(range(0, 85, 5))
+    colorbar(boundaries=bounds)
+    xticks(range(2), ('failed', 'passed'))
+    yticks(range(2), ('failed', 'passed'))
+    xlabel('Predicted class')
+    ylabel('Actual class')
+    suptitle('Confusion matrix (Accuracy: {:.4f}%, Error Rate: {:.4f}%)'
+             .format(accuracy, error_rate))
+    title('LogReg Model (Regularization strength: {})'
+          .format(opt_regularization_strength))
+
+    filepath = os.path.dirname(os.path.realpath(__file__))
+    output_path = os.path.join(filepath,
+                               f'confusion_matrices/logreg/confmat_{outer_iteration + 1}.png')
+    savefig(output_path, format='png', dpi=500, bbox_inches='tight')
+    # show()
+    close()
+
+    optimal_params[opt_inv_regularization_strength] = test_error_weighted_ratio
 
     outer_iteration += 1
 
-gen_error = np.sum(test_errors)
-gen_error_ratio = np.sum(test_errors_ratio)
+gen_error = np.sum(test_errors_weighted)
+gen_error_ratio = np.sum(test_errors_weighted_ratio)
 
+# Print unweighted, absolute test errors
+print('Unweighted test errors (Fold <fold_no>: <test_error>):')
+for i, t in enumerate(test_errors, 1):
+    print(f'Fold {i}: {t}')
 
 print(('Test errors (weighted with respect to size of test set): '
-       f'{test_errors}'))
+       f'{test_errors_weighted}'))
 print(f'Generalization error: {gen_error}')
 
 print(('Test errors (weighted with respect to size of test set): '
-       f'{test_errors_ratio}'))
+       f'{test_errors_weighted_ratio}'))
 print(f'Generalization error ratio: {gen_error_ratio * 100}%')
 
 
