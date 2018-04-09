@@ -15,6 +15,7 @@ from sklearn.metrics import confusion_matrix
 from dtu_ml_data_mining.project_2.project_2 import *
 
 
+
 ## Cross validation ##
 
 # Standardize and normalize the data #
@@ -47,6 +48,10 @@ test_errors_weighted = np.zeros((K_outer,))
 test_errors_weighted_ratio = np.zeros((K_outer,))
 
 optimal_depths = {}
+
+
+# print(set(X_k[:, 44].A.ravel()))
+# exit()
 
 outer_iteration = 0
 for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
@@ -106,36 +111,36 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     test_errors_weighted_ratio[outer_iteration] = test_error_ratio * \
         test_size_ratio
 
-    # Plot Confusion Matrix
-    cm = confusion_matrix(y_test, y_est_test)
-    accuracy = 100 * cm.diagonal().sum() / cm.sum()
-    error_rate = 100 - accuracy
-    figure(2)
+    # # Plot Confusion Matrix
+    # cm = confusion_matrix(y_test, y_est_test)
+    # accuracy = 100 * cm.diagonal().sum() / cm.sum()
+    # error_rate = 100 - accuracy
+    # figure(2)
 
-    thresh = 30
-    for i in (0, 1):
-        for j in (0, 1):
-            text(j, i, str(cm[i, j]),
-                 horizontalalignment='center',
-                 color='white' if cm[i, j] > thresh else 'black')
+    # thresh = 30
+    # for i in (0, 1):
+    #     for j in (0, 1):
+    #         text(j, i, str(cm[i, j]),
+    #              horizontalalignment='center',
+    #              color='white' if cm[i, j] > thresh else 'black')
 
-    imshow(cm, cmap=colormap.Blues, vmin=0, vmax=80)
-    bounds = list(range(0, 85, 5))
-    colorbar(boundaries=bounds)
-    xticks(range(2), ('failed', 'passed'))
-    yticks(range(2), ('failed', 'passed'))
-    xlabel('Predicted class')
-    ylabel('Actual class')
-    suptitle('Confusion matrix (Accuracy: {:.4f}%, Error Rate: {:.4f}%)'.format(
-        accuracy, error_rate))
-    title('DT Model (depth: {})'.format(optimal_depth))
+    # imshow(cm, cmap=colormap.Blues, vmin=0, vmax=80)
+    # bounds = list(range(0, 85, 5))
+    # colorbar(boundaries=bounds)
+    # xticks(range(2), ('failed', 'passed'))
+    # yticks(range(2), ('failed', 'passed'))
+    # xlabel('Predicted class')
+    # ylabel('Actual class')
+    # suptitle('Confusion matrix (Accuracy: {:.4f}%, Error Rate: {:.4f}%)'.format(
+    #     accuracy, error_rate))
+    # title('DT Model (depth: {})'.format(optimal_depth))
 
-    filepath = os.path.dirname(os.path.realpath(__file__))
-    output_path = os.path.join(filepath,
-                               f'confusion_matrices/dt/confmat_{outer_iteration + 1}.png')
-    savefig(output_path, format='png', dpi=500, bbox_inches='tight')
-    # show()
-    close()
+    # filepath = os.path.dirname(os.path.realpath(__file__))
+    # output_path = os.path.join(filepath,
+    #                            f'confusion_matrices/dt/confmat_{outer_iteration + 1}.png')
+    # savefig(output_path, format='png', dpi=500, bbox_inches='tight')
+    # # show()
+    # close()
 
     optimal_depths[optimal_depth] = test_error_ratio
 
@@ -161,11 +166,12 @@ print(f'Test errors (ratios; weighted with respect to size of test set): ',
       test_errors_weighted_ratio)
 print(f'Generalization error: {gen_error_ratio * 100}%')
 
+opt_params = min(optimal_depths.items(), key=lambda e: e[1])
 print('The optimal model parameters (depth, test_error): ',
-      min(optimal_depths.items(), key=lambda e: e[1]))
+      opt_params)
 
 
-dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=3)
+dtc = tree.DecisionTreeClassifier(criterion='gini', max_depth=opt_params[0])
 dtc = dtc.fit(X_k, y)
 out = tree.export_graphviz(dtc, out_file='tree_project_2.gvz',
                            feature_names=k_encoded_attr_names)
