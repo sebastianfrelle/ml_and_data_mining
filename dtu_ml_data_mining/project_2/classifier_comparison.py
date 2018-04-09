@@ -1,5 +1,3 @@
-# exercise 6.3.1
-
 import numpy as np
 from matplotlib.pyplot import (
     boxplot, figure, show, xlabel, ylabel, savefig, xticks, yticks, title,
