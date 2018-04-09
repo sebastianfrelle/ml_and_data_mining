@@ -35,31 +35,24 @@ X_k, y = X_k_with_grades[:, :-1], X_k_with_grades[:, -1]
 y = y.A.ravel()
 
 # Define models for splitting outer and inner folds
-no_models = 5
 K_outer = 10
 K_inner = 10
 OCV = model_selection.KFold(n_splits=K_outer, shuffle=False)
 ICV = model_selection.KFold(n_splits=K_inner, shuffle=False)
-
-
-# Train model with different regularization strengths. sklearn method takes
-# inverse regularization strength, so prepare by producing a list containing the
-# inverse of our reg. strengths.
-regularization_strengths = [10 ** e for e in range(-2, 3)]
-inv_regs = [1 / e for e in regularization_strengths]
 
 # Store generalization
 test_errors = np.zeros((K_outer,))
 test_errors_weighted = np.zeros((K_outer,))
 test_errors_weighted_ratio = np.zeros((K_outer,))
 
+hidden_nodes = range(1, 61)
 
 optimal_params = {}
 
 outer_iteration = 0
 for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     print(f'Outer {fold_no_outer}/{K_outer}')
-    gen_errors = np.zeros((len(inv_regs),))
+    gen_errors = np.zeros((len(hidden_nodes),))
 
     # Select data for outer fold
     X_par = X_k[par_index, :]
@@ -67,7 +60,7 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     X_test = X_k[test_index, :]
     y_test = y[test_index]
 
-    # Ratio of test
+    # Ratio of test set size
     test_size_ratio = y_test.shape[0] / X_k.shape[0]
 
     for fold_no_inner, (train_index, val_index) in enumerate(ICV.split(X_par), 1):
@@ -83,9 +76,8 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
         val_size_ratio = y_val.shape[0] / y_par.shape[0]
 
         # Train models using different regularization strengths
+        
         for i, c in enumerate(inv_regs):
-            model = lm.logistic.LogisticRegression(C=c)
-            model = model.fit(X_train, y_train)
 
             # Classify
             y_est_val = model.predict(X_val)
@@ -113,38 +105,6 @@ for fold_no_outer, (par_index, test_index) in enumerate(OCV.split(X_k), 1):
     test_error_weighted_ratio = test_error / len(y_test)
     test_errors_weighted_ratio[outer_iteration] = test_error_weighted_ratio * \
         test_size_ratio
-
-    # Plot Confusion Matrix
-    cm = confusion_matrix(y_test, y_est_test)
-    accuracy = 100 * cm.diagonal().sum() / cm.sum()
-    error_rate = 100 - accuracy
-    figure(2)
-
-    thresh = 30
-    for i in (0, 1):
-        for j in (0, 1):
-            text(j, i, str(cm[i, j]),
-                 horizontalalignment='center',
-                 color='white' if cm[i, j] > thresh else 'black')
-
-    imshow(cm, cmap=colormap.Blues, vmin=0, vmax=80)
-    bounds = list(range(0, 85, 5))
-    colorbar(boundaries=bounds)
-    xticks(range(2), ('failed', 'passed'))
-    yticks(range(2), ('failed', 'passed'))
-    xlabel('Predicted class')
-    ylabel('Actual class')
-    suptitle('Confusion matrix (Accuracy: {:.4f}%, Error Rate: {:.4f}%)'
-             .format(accuracy, error_rate))
-    title('LogReg Model (Regularization strength: {})'
-          .format(opt_regularization_strength))
-
-    filepath = os.path.dirname(os.path.realpath(__file__))
-    output_path = os.path.join(filepath,
-                               f'confusion_matrices/logreg/confmat_{outer_iteration + 1}.png')
-    savefig(output_path, format='png', dpi=500, bbox_inches='tight')
-    # show()
-    close()
 
     optimal_params[opt_inv_regularization_strength] = test_error_weighted_ratio
 
