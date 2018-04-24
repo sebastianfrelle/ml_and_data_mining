@@ -6,7 +6,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn import model_selection
 
 # Load Matlab data file and extract variables of interest
-mat_data = loadmat('../Data/synth1.mat')
+mat_data = loadmat('./toolbox/Data/synth1.mat')
 X = mat_data['X']
 y = mat_data['y'].squeeze()
 attributeNames = [name[0] for name in mat_data['attributeNames'].squeeze()]
