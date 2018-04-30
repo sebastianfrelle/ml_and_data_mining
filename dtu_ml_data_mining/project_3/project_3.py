@@ -1,6 +1,6 @@
 import numpy as np
 import xlrd
-from categoric2numeric import categoric2numeric
+from toolbox.Tools.categoric2numeric import categoric2numeric
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 
